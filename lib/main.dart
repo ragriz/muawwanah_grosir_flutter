@@ -1,9 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
+import 'config/string.dart' as str;
+import 'config/color.dart' as clr;
+import 'config/global.dart' as global;
 
 void main() {
   runApp(const MyApp());
@@ -16,21 +15,36 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Muawwanah Grosir',
+      title: str.title,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: clr.primary,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(),
+      routes: {
+        '/' : (context) => Loading(),
+
+      },
     );
   }
 }
+
 List<String> list = <String>['One', 'Two', 'Three', 'Four'];
 String dropdownValue = list.first;
-var vis_login = false, vis_database = true;
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+bool vis_login = false, vis_database = true;
+TextEditingController tf_server = TextEditingController();
+TextEditingController tf_user = TextEditingController();
+TextEditingController tf_pass = TextEditingController();
+FocusNode fn_tf_user = FocusNode();
+FocusNode fn_tf_pass = FocusNode();
+FocusNode fn_tf_server = FocusNode();
+FocusNode fn_bt_server = FocusNode();
+FocusNode fn_bt_back = FocusNode();
+FocusNode fn_bt_login = FocusNode();
+FocusNode fn_dd_hakAkses = FocusNode();
+FocusNode fn = FocusNode();
 
+class MyHomePage extends StatefulWidget {
+  MyHomePage({super.key});
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -101,10 +115,23 @@ class _MyHomePageState extends State<MyHomePage> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     ElevatedButton(
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                                         onPressed: (){
-                                          login(context);
+                                          setState((){
+                                            kembali();
+                                          });
                                         },
-                                        child: const Text('Login'))
+                                        focusNode: fn_bt_back,
+                                        child: const Text('Kembali')),
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+                                      child: ElevatedButton(
+                                          onPressed: (){
+                                            login(context);
+                                          },
+                                          focusNode: fn_bt_login,
+                                          child: const Text('Login')),
+                                    )
                                   ],
                                 ),
                               ),
@@ -133,8 +160,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               Container(
                                 margin: const EdgeInsets.fromLTRB(0, 40, 0, 0),
                                 child: TextField(
-                                  focusNode: fn_tf_user,
-                                  controller: tf_user,
+                                  focusNode: fn_tf_server,
+                                  controller: tf_server,
                                   textInputAction: TextInputAction.next,
                                   decoration: const InputDecoration(
                                     border: UnderlineInputBorder(),
@@ -149,9 +176,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                   children: [
                                     ElevatedButton(
                                         onPressed: (){
-
+                                          setState((){
+                                            getServer();
+                                          });
                                         },
-                                        child: const Text('Pilih'))
+                                        child: const Text('Pilih')),
                                   ],
                                 ),
                               ),
@@ -170,13 +199,31 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-TextEditingController tf_user = TextEditingController();
-TextEditingController tf_pass = TextEditingController();
-FocusNode fn_tf_user = FocusNode();
-FocusNode fn_tf_pass = FocusNode();
-FocusNode fn = FocusNode();
+getServer(){
+  vis_database = false;
+  vis_login = true;
+  fn_tf_user.requestFocus();
+}
 
-login(BuildContext context) async {
+kembali(){
+  vis_database = true;
+  vis_login = false;
+  tf_user.text = "";
+  tf_pass.text = "";
+  fn_tf_server.requestFocus();
+}
+
+login(BuildContext context) {
+  if( tf_user.text != "" ){
+    if( tf_pass.text != "" ){
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Page()));
+    }else{
+      global.dialog(context, 'Password harus diisi!');
+    }
+  }else{
+    global.dialog(context, 'Username harus diisi!');
+  }
+  /*
   final response = await http.post(
     Uri.parse('http://localhost/muawwanahgrosirmaster/config/service_client_read.php'),
     headers: <String, String>{
@@ -198,37 +245,25 @@ login(BuildContext context) async {
 
       }
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SecondRoute()),
-    );
   }else{
     throw Exception('Failed to load db');
   }
+   */
 }
 
 handleKey(RawKeyEvent key) {
   if (key.runtimeType.toString() == 'RawKeyDownEvent') {
-    if( Platform.isWindows ){
-
-    }
-    if( kIsWeb ){
-      RawKeyEventDataWeb data = key.data as RawKeyEventDataWeb;
-      //print(data.keyCode);
-      if (fn_tf_user.hasFocus) { //user focus
-        if (data.keyCode == 40) {
-          fn_tf_pass.requestFocus();
-          //var curPos = tf_user.selection.base.offset;
-          //tf_user.selection = TextSelection(baseOffset: curPos, extentOffset: curPos);
-        }
+    if (fn_tf_user.hasFocus) { //user focus
+      if (key.logicalKey == LogicalKeyboardKey.arrowDown) {
+        fn_tf_pass.requestFocus();
       }
-      if (fn_tf_pass.hasFocus) { //pass focus
-        if (data.keyCode == 38) {
-          fn_tf_user.requestFocus();
-        }
-        if (data.keyCode == 40) {
+    }
+    if (fn_tf_pass.hasFocus) { //pass focus
+      if (key.logicalKey == LogicalKeyboardKey.arrowUp) {
+        fn_tf_user.requestFocus();
+      }
+      if (key.logicalKey == LogicalKeyboardKey.arrowDown) {
 
-        }
       }
     }
   }
@@ -262,29 +297,6 @@ class _DropdownButtonExampleState extends State<DropdownButtonExample> {
           child: Text(value),
         );
       }).toList(),
-    );
-  }
-}
-
-
-class SecondRoute extends StatelessWidget {
-  const SecondRoute({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Second Route'),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            // Navigate back to first route when tapped.
-            Navigator.pop(context);
-          },
-          child: const Text('Go back!'),
-        ),
-      ),
     );
   }
 }
