@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'config/string.dart' as str;
 import 'config/color.dart' as clr;
-import 'config/template.dart';
 import 'config/sidebar.dart';
+import 'config/element.dart';
+import 'config/template.dart';
 
-
-class Main extends StatefulWidget{
+class Pelanggan extends StatefulWidget{
   @override
-  _MainState createState() => _MainState();
+  _PelangganState createState() => _PelangganState();
 
 }
-var curPage = "";
-class _MainState extends State<Main>{
+
+class _PelangganState extends State<Pelanggan>{
   @override
   void initState() {
     // TODO: implement initState
@@ -28,10 +28,23 @@ class _MainState extends State<Main>{
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const temp_headerDefault('Dashboard'),
+          temp_headerSearch('Kelola Pelanggan',
+              Row(
+                children: [
+                  eCheckbox('Nama', true, refreshSearch()),
+                  eCheckbox('Grup', true, refreshSearch()),
+                  eCheckbox('text', true, refreshSearch())
+                ],
+              ) as StatelessWidget,
+              refreshSearch()
+          ),
           Row()
         ],
       ),
     );
   }
+}
+
+refreshSearch(){
+
 }
