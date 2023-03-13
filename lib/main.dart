@@ -8,9 +8,7 @@ import 'config/sidebar.dart';
 class Main extends StatefulWidget{
   @override
   _MainState createState() => _MainState();
-
 }
-var curPage = "";
 class _MainState extends State<Main>{
   @override
   void initState() {
