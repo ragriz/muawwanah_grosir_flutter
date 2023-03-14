@@ -1,13 +1,63 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
+import 'package:http/http.dart' as http;
+import 'package:muawwanah_grosir_flutter/config/string.dart';
 
-var isAkunLoaded = false;
-var arrTableLoaded = [];
-init_load_db(String table){
-
+var urlWebServer = url_webServer;
+var arrObjTable = [];
+init_db(String table){
+  arrObjTable.add({
+    'tbl':table,
+    'loaded':false,
+    'list':[],
+  });
 }
+
+init_db_loadAll(Function fn){
+  for( var i=0; i<arrObjTable.length; i++ ){
+    var d = arrObjTable[i];
+    init_db_load(d['tbl'], i, fn);
+  }
+}
+init_db_load(String table, int pos, Function fn) async{
+  var curServer = await SessionManager().get(postObject_serverAddress);
+  var url = 'http://$curServer/$urlWebServer/config/service_client_read.php';
+  final response = await http.post(
+    Uri.parse(url),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, String>{
+      postObject_serverAddress: curServer,
+      postObject_table : table
+    }),
+  );
+  if( response.statusCode == 200 ){
+    arrObjTable[pos]['loaded'] = true;
+    arrObjTable[pos]['json'] = jsonDecode(response.body);
+    fn(); //function for refresh ui
+  }else{
+    print('fail to load $table');
+  }
+}
+init_db_reset(){
+  for( var i=0; i<arrObjTable.length; i++ ){
+    arrObjTable[i]['loaded'] = false;
+  }
+}
+init_db_checkIfAllLoaded(){
+  var value = true;
+  for( dynamic d in arrObjTable ){
+      if( !d['loaded'] ){
+         value = false;
+      }
+  }
+  return value;
+}
+
 dialog(BuildContext context, String text){
   FocusNode fn = FocusNode();
   showDialog(
@@ -27,16 +77,15 @@ dialog(BuildContext context, String text){
   fn.requestFocus();
 }
 
-sessionSet(dynamic d) async {
-  await SessionManager().set('id', d);
+sessionSet(String key, dynamic d) async {
+  await SessionManager().set(key, d);
 }
 sessionGet(String data) async {
   var d = await SessionManager().get(data);
-  print(d);
+  return d;
 }
 sessionRemove(String data) async {
   var d = await SessionManager().remove(data);
-  print(d);
 }
 sessionDestroy(){
   SessionManager().destroy();

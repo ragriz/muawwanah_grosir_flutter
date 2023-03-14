@@ -4,16 +4,19 @@ import 'dart:html';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'config/string.dart' as str;
+import 'package:flutter_session_manager/flutter_session_manager.dart';
+import 'config/string.dart';
 import 'config/color.dart' as clr;
 import 'config/global.dart' as global;
 import 'package:http/http.dart' as http;
 
-List<String> list = <String>['Front Office'];
-String dropdownValue = list.first;
+List<HakAkses> list = [];
+int dropdownValue = 1;
 String str_bt_server = "Login";
 bool vis_bt_server = false;
 bool vis_login = false, vis_database = true;
+bool vis_cpi_bt_server = false;
+bool isCheckingServer = false;
 TextEditingController tf_server = TextEditingController();
 TextEditingController tf_user = TextEditingController();
 TextEditingController tf_pass = TextEditingController();
@@ -25,7 +28,7 @@ FocusNode fn_bt_back = FocusNode();
 FocusNode fn_bt_login = FocusNode();
 FocusNode fn_dd_hakAkses = FocusNode();
 FocusNode fn = FocusNode();
-List<Map<String, dynamic>> lD = [];
+List<Map<String, dynamic>> l_hakAkses = [];
 class Login extends StatefulWidget {
   Login({super.key});
   @override
@@ -37,10 +40,8 @@ class _LoginState extends State<Login> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Map<String, dynamic> map = new Map();
-    map.putIfAbsent('control', () => tf_user);
-    map.putIfAbsent('focus', () => fn_tf_user);
-    lD.add(map);
+    global.init_db('akun');
+    global.init_db('hak_akses');
   }
   @override
   Widget build(BuildContext context) {
@@ -171,17 +172,27 @@ class _LoginState extends State<Login> {
                                       duration: const Duration(seconds: 1),
                                       child: ElevatedButton(
                                         onPressed: (){
-                                          setState((){
-                                            getServer(context);
-                                          });
+                                          getServer(context);
                                         },
                                         focusNode: fn_bt_server,
                                         child: Row(
                                           children: [
                                             Visibility(
-                                                child: CircularProgressIndicator(),
-                                            visible: vis_ic_,),
-                                            const Text('Pilih')
+                                                visible: vis_cpi_bt_server,
+                                                child: Row(
+                                                  children: const [
+                                                    SizedBox(
+                                                      width: 20,
+                                                      height: 20,
+                                                      child: CircularProgressIndicator(
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                  ],
+                                                ),
+                                            ),
+                                            Text(str_bt_server)
                                           ],
                                         )),
                                     )
@@ -201,30 +212,32 @@ class _LoginState extends State<Login> {
         )
     );
   }
-}
 
-getServer(BuildContext context) async {
-  var curServer = tf_server.text;
-  if( curServer != "" ){
-    try {
+  getServer(BuildContext context) async {
+    isCheckingServer = true;
+    var curServer = tf_server.text;
+    setState((){
+      disableServerButton();
+    });
+    if( curServer != "" ){
       final response = await http.post(
         Uri.parse('http://$curServer/muawwanahgrosirmaster/config/service_client.php'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
-          'server_address': curServer,
-          'opr' : 'check_connection'
+          postObject_serverAddress: curServer,
+          postObject_operation : postKey_operation_checkConnection
         }),
       );
       if( response.statusCode == 200 ){
+        global.sessionSet(postObject_serverAddress, curServer);
         Map<String, dynamic> map = jsonDecode(response.body);
         if( map['msg'] == 's_001' ){
-          vis_database = false;
-          vis_login = true;
-          fn_tf_user.requestFocus();
+          global.init_db_reset();
+          global.init_db_loadAll(checkData);
         }else{
-          global.dialog(context, 'gagal memuat database !');
+          doServerError(context);
         }
         /*
           //Map<String, dynamic> map = jsonDecode(response.body);
@@ -238,44 +251,82 @@ getServer(BuildContext context) async {
           }
           */
       }else{
+        print(response.statusCode);
         doServerError(context);
       }
-    } catch(e){
-      doServerError(context);
-    }
-  }else{
-    global.dialog(context, 'alamat server harus diisi !');
-  }
-  /*
-  vis_database = false;
-  vis_login = true;
-  fn_tf_user.requestFocus();
-   */
-}
-doServerError(BuildContext context){
-  global.dialog(context, 'gagal memuat database !');
-  fn_tf_server.requestFocus();
-}
-kembali(){
-  vis_database = true;
-  vis_login = false;
-  tf_user.text = "";
-  tf_pass.text = "";
-  fn_tf_server.requestFocus();
-}
+      try {
 
-login(BuildContext context) {
-  if( tf_user.text != "" ){
-    if( tf_pass.text != "" ){
-      Navigator.pushReplacementNamed(context, '/main');
+      } catch(e){
+        print(e);
+        doServerError(context);
+      }
     }else{
-      global.dialog(context, 'Password harus diisi!');
+      global.dialog(context, 'alamat server harus diisi !');
+      setState((){
+        enableServerButton();
+      });
     }
-  }else{
-    global.dialog(context, 'Username harus diisi!');
   }
-  /*
+  checkData(){
+    if( global.init_db_checkIfAllLoaded() ){
+      setState((){
+        vis_database = false;
+        vis_login = true;
+        isCheckingServer = false;
+        enableServerButton();
+      });
+      fn_tf_user.requestFocus();
+    }
+  }
+  enableServerButton(){
+    vis_cpi_bt_server = false;
+    str_bt_server = 'Pilih';
+  }
+  disableServerButton(){
+    vis_cpi_bt_server = true;
+    str_bt_server = 'Menghubungkan';
+  }
+
+  doServerError(BuildContext context){
+    global.dialog(context, 'gagal memuat database !');
+    fn_tf_server.requestFocus();
+    setState((){
+      enableServerButton();
+    });
+  }
+  kembali(){
+    vis_database = true;
+    vis_login = false;
+    tf_user.text = "";
+    tf_pass.text = "";
+    fn_tf_server.requestFocus();
+  }
+
+  login(BuildContext context) {
+    if( tf_user.text != "" ){
+      if( tf_pass.text != "" ){
+        bool isAkunExist = false;
+        for( dynamic l in list ){
+
+          Map<String, dynamic> map = json.decode(l['json']);
+          if( map['boolean_akun']!=null ){
+
+          }
+          if( tf_user.text == l['username'] && tf_pass.text == l['pass'] ){
+
+          }
+        }
+        Navigator.pushReplacementNamed(context, '/main');
+      }else{
+        global.dialog(context, 'Password harus diisi!');
+      }
+    }else{
+      global.dialog(context, 'Username harus diisi!');
+    }
+    /*
    */
+  }
+
 }
 
 handleKey(RawKeyEvent key) {
@@ -301,23 +352,41 @@ class _DropdownButtonExampleState extends State<DropdownButtonExample> {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<String>(
+    return DropdownButton<HakAkses>(
       value: dropdownValue,
       icon: const Icon(Icons.arrow_drop_down),
       elevation: 5,
-      onChanged: (String? value) {
+      onChanged: (HakAkses? value) {
         // This is called when the user selects an item.
         setState(() {
-          dropdownValue = value!;
+          dropdownValue = 1;
         });
       },
       focusNode: fn_dd_hakAkses,
-      items: list.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(value),
-        );
-      }).toList(),
+      items: [
+        DropdownMenuItem(
+          child: Text('Admin'),
+        value: 1,
+      )],
     );
   }
+
+  List<HakAkses> parsePackages(String responseBody) {
+    final parsedJson = json.decode(responseBody);
+    final parsed = parsedJson.cast<Map<String, dynamic>>();
+    return parsed.map<HakAkses>((json) => HakAkses.fromJson(json)).toList();
+  }
+}
+
+class HakAkses{
+  int id;
+  String nama;
+  HakAkses(this.id, this.nama);
+  HakAkses.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        nama = json['nama'];
+  Map<String, dynamic> toJson() => {
+    'id' : id,
+    'nama': nama
+  };
 }
