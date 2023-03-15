@@ -5,13 +5,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'config/string.dart';
 import 'config/color.dart' as clr;
 import 'config/global.dart' as global;
 import 'package:http/http.dart' as http;
 
 List<HakAkses> list = [];
-int dropdownValue = 1;
+int id_hakAkses = 0;
 String str_bt_server = "Login";
 bool vis_bt_server = false;
 bool vis_login = false, vis_database = true;
@@ -28,7 +29,7 @@ FocusNode fn_bt_back = FocusNode();
 FocusNode fn_bt_login = FocusNode();
 FocusNode fn_dd_hakAkses = FocusNode();
 FocusNode fn = FocusNode();
-List<Map<String, dynamic>> l_hakAkses = [];
+List<HakAkses> l_hakAkses = [];
 class Login extends StatefulWidget {
   Login({super.key});
   @override
@@ -42,6 +43,7 @@ class _LoginState extends State<Login> {
     super.initState();
     global.init_db('akun');
     global.init_db('hak_akses');
+    global.init_db('pegawai');
   }
   @override
   Widget build(BuildContext context) {
@@ -220,26 +222,27 @@ class _LoginState extends State<Login> {
       disableServerButton();
     });
     if( curServer != "" ){
-      final response = await http.post(
-        Uri.parse('http://$curServer/muawwanahgrosirmaster/config/service_client.php'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          postObject_serverAddress: curServer,
-          postObject_operation : postKey_operation_checkConnection
-        }),
-      );
-      if( response.statusCode == 200 ){
-        global.sessionSet(postObject_serverAddress, curServer);
-        Map<String, dynamic> map = jsonDecode(response.body);
-        if( map['msg'] == 's_001' ){
-          global.init_db_reset();
-          global.init_db_loadAll(checkData);
-        }else{
-          doServerError(context);
-        }
-        /*
+      try {
+        final response = await http.post(
+          Uri.parse('http://$curServer/muawwanahgrosirmaster/config/service_client.php'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            postObject_serverAddress: curServer,
+            postObject_operation : postKey_operation_checkConnection
+          }),
+        );
+        if( response.statusCode == 200 ){
+          await global.sessionSet(postObject_serverAddress, curServer);
+          Map<String, dynamic> map = jsonDecode(response.body);
+          if( map['msg'] == 's_001' ){
+            global.init_db_reset();
+            global.init_db_loadAll(checkData);
+          }else{
+            doServerError(context);
+          }
+          /*
           //Map<String, dynamic> map = jsonDecode(response.body);
           List<dynamic> list = json.decode(response.body);
           for( dynamic l in list ){
@@ -250,12 +253,10 @@ class _LoginState extends State<Login> {
             }
           }
           */
-      }else{
-        print(response.statusCode);
-        doServerError(context);
-      }
-      try {
-
+        }else{
+          print(response.statusCode);
+          doServerError(context);
+        }
       } catch(e){
         print(e);
         doServerError(context);
@@ -267,6 +268,7 @@ class _LoginState extends State<Login> {
       });
     }
   }
+
   checkData(){
     if( global.init_db_checkIfAllLoaded() ){
       setState((){
@@ -274,10 +276,15 @@ class _LoginState extends State<Login> {
         vis_login = true;
         isCheckingServer = false;
         enableServerButton();
+        l_hakAkses.clear();
+        for( var d in global.getList_byName('hak_akses') ){
+          l_hakAkses.add(HakAkses(int.parse(d['id']), d['nama']));
+        }
       });
       fn_tf_user.requestFocus();
     }
   }
+
   enableServerButton(){
     vis_cpi_bt_server = false;
     str_bt_server = 'Pilih';
@@ -302,21 +309,37 @@ class _LoginState extends State<Login> {
     fn_tf_server.requestFocus();
   }
 
-  login(BuildContext context) {
+  login(BuildContext context) async {
     if( tf_user.text != "" ){
       if( tf_pass.text != "" ){
         bool isAkunExist = false;
-        for( dynamic l in list ){
-
+        var curAkun, curNama;
+        List<dynamic> l_akun = global.getList_byName('akun');
+        for( dynamic l in l_akun ){
           Map<String, dynamic> map = json.decode(l['json']);
-          if( map['boolean_akun']!=null ){
-
-          }
-          if( tf_user.text == l['username'] && tf_pass.text == l['pass'] ){
-
+          print(l['username']);
+          print(l['pass']);
+          if( tf_user.text == l['username'] && tf_pass.text == l['pass'] && id_hakAkses == int.parse(l['id_hakAkses']) ){
+            curAkun = l['id'];
+            if( map['boolean_akunKhusus']!=null ){
+              if( map['boolean_akunKhusus'] ){
+                curNama = map['string_nama'];
+              }else{
+                curNama = global.list_getValue(global.getList_byName('pegawai'), 'id', map['integer_idPegawai'], 'nama');
+              }
+            }
+           isAkunExist = true;
           }
         }
-        Navigator.pushReplacementNamed(context, '/main');
+        if( isAkunExist ){
+          await global.sessionSet(session_idAkun, curAkun);
+          await global.sessionSet(session_nama, curNama);
+          await global.sessionSet(session_idHakAkses, id_hakAkses);
+          await global.sessionSet(session_hakAkses, global.list_getValue(global.getList_byName('hak_akses'), 'id', id_hakAkses.toString(), 'nama'));
+          Navigator.pushReplacementNamed(context, '/main');
+        }else{
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("username atau password tidak sesuai !"),));
+        }
       }else{
         global.dialog(context, 'Password harus diisi!');
       }
@@ -348,26 +371,33 @@ class DropdownButtonExample extends StatefulWidget {
 }
 
 class _DropdownButtonExampleState extends State<DropdownButtonExample> {
-  String dropdownValue = list.first;
-
+  var items;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    items = l_hakAkses.map((item) {
+      return DropdownMenuItem<int>(
+        child: Text(item.nama),
+        value: item.id,
+      );
+    }).toList();
+    id_hakAkses = l_hakAkses[0].id;
+  }
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<HakAkses>(
-      value: dropdownValue,
+    return DropdownButton<int>(
+      value: id_hakAkses,
       icon: const Icon(Icons.arrow_drop_down),
       elevation: 5,
-      onChanged: (HakAkses? value) {
+      onChanged: (int? value) {
         // This is called when the user selects an item.
         setState(() {
-          dropdownValue = 1;
+          id_hakAkses = value!;
         });
       },
       focusNode: fn_dd_hakAkses,
-      items: [
-        DropdownMenuItem(
-          child: Text('Admin'),
-        value: 1,
-      )],
+      items: items,
     );
   }
 

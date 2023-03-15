@@ -15,7 +15,6 @@ init_db(String table){
     'list':[],
   });
 }
-
 init_db_loadAll(Function fn){
   for( var i=0; i<arrObjTable.length; i++ ){
     var d = arrObjTable[i];
@@ -37,7 +36,7 @@ init_db_load(String table, int pos, Function fn) async{
   );
   if( response.statusCode == 200 ){
     arrObjTable[pos]['loaded'] = true;
-    arrObjTable[pos]['json'] = jsonDecode(response.body);
+    arrObjTable[pos]['list'] = jsonDecode(response.body);
     fn(); //function for refresh ui
   }else{
     print('fail to load $table');
@@ -54,6 +53,27 @@ init_db_checkIfAllLoaded(){
       if( !d['loaded'] ){
          value = false;
       }
+  }
+  return value;
+}
+//get list only work for loaded table
+getList_byName(String table){
+  var value;
+  for( var d in arrObjTable ){
+    if( d['tbl'] == table  ){
+      value = d['list'];
+    }
+  }
+  return value;
+}
+list_getValue(var list, String targetObj, String targetKey, String targetReturn){
+  var value;
+  print(list);
+  for( var d in list ){
+    print(d[targetObj]);
+    if( d[targetObj] == targetKey ){
+      value = d[targetReturn];
+    }
   }
   return value;
 }
@@ -77,15 +97,15 @@ dialog(BuildContext context, String text){
   fn.requestFocus();
 }
 
-sessionSet(String key, dynamic d) async {
-  await SessionManager().set(key, d);
+sessionSet(String key, dynamic d) {
+  SessionManager().set(key, d);
 }
 sessionGet(String data) async {
-  var d = await SessionManager().get(data);
+  var d = SessionManager().get(data);
   return d;
 }
 sessionRemove(String data) async {
-  var d = await SessionManager().remove(data);
+  await SessionManager().remove(data);
 }
 sessionDestroy(){
   SessionManager().destroy();

@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:muawwanah_grosir_flutter/config/global.dart';
+import 'package:muawwanah_grosir_flutter/config/string.dart';
 
 class Sidebar extends StatefulWidget {
   const Sidebar({super.key});
   @override
   State<Sidebar> createState() => _SidebarState();
 }
-
+String ses_nama = "", ses_hakAkses = "";
 class _SidebarState extends State<Sidebar> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setProfile();
+  }
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -17,19 +25,19 @@ class _SidebarState extends State<Sidebar> {
           DrawerHeader(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Icon(
+                children: [
+                  const Icon(
                       Icons.person
                   ),
                   Text(
-                    'Nama Pengguna',
-                    style: TextStyle(
+                    ses_nama,
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                      'Jabatan',
-                      style : TextStyle(
+                      ses_hakAkses,
+                      style : const TextStyle(
                         fontStyle: FontStyle.italic,
                       )
                   )
@@ -69,11 +77,11 @@ class _SidebarState extends State<Sidebar> {
                       ListTile(
                         title: Text('Pelanggan'),
                         onTap: (){
-                          Navigator.pushReplacementNamed(context, '/');
+                          Navigator.pushReplacementNamed(context, '/pelanggan');
                         },
                       ),
                       ListTile(
-                        title: Text('Grup Pelanggan Pelanggan'),
+                        title: Text('Grup Pelanggan'),
                       ),
                     ],
                   ),
@@ -119,5 +127,11 @@ class _SidebarState extends State<Sidebar> {
         ],
       ),
     );
+  }
+
+  setProfile() async {
+    ses_nama = await sessionGet(session_nama);
+    ses_hakAkses = await sessionGet(session_hakAkses);
+    setState((){});
   }
 }

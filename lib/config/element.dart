@@ -1,21 +1,33 @@
 import 'package:flutter/material.dart';
 import 'dimens.dart' as dm;
 
-class eCheckbox extends StatelessWidget {
+class eCheckbox extends StatefulWidget {
   final String text;
-  final bool value;
+  bool value;
   final Function fn_onChange;
-  const eCheckbox(this.text, this.value, this.fn_onChange);
+  eCheckbox(this.text, this.value, this.fn_onChange, {super.key});
+
+  @override
+  State<eCheckbox> createState() => _eCheckboxState();
+}
+
+class _eCheckboxState extends State<eCheckbox> {
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(text),
+        Text(widget.text),
         Padding(
           padding: const EdgeInsets.fromLTRB(10,  0, 0, 0),
           child: Checkbox(
-              value: value,
-              onChanged: fn_onChange()
+              value: widget.value,
+              onChanged: (bool? value){
+                setState((){
+                  widget.value = value!;
+                  print(value!);
+                  widget.fn_onChange();
+                });
+              }
           ),
         )
       ],

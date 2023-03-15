@@ -8,7 +8,6 @@ import 'config/template.dart';
 class Pelanggan extends StatefulWidget{
   @override
   _PelangganState createState() => _PelangganState();
-
 }
 
 class _PelangganState extends State<Pelanggan>{
@@ -31,20 +30,20 @@ class _PelangganState extends State<Pelanggan>{
           temp_headerSearch('Kelola Pelanggan',
               Row(
                 children: [
-                  eCheckbox('Nama', true, refreshSearch()),
-                  eCheckbox('Grup', true, refreshSearch()),
-                  eCheckbox('text', true, refreshSearch())
+                  eCheckbox('Nama', true, refreshSearch),
+                  eCheckbox('Grup', true, refreshSearch),
+                  eCheckbox('text', true, refreshSearch)
                 ],
-              ) as StatelessWidget,
-              refreshSearch()
+              ),
+              refreshSearch
           ),
-          Row()
         ],
       ),
     );
   }
 }
-
+var count = 0;
 refreshSearch(){
-
+  count++;
+  print(count);
 }
