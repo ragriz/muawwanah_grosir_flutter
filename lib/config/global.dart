@@ -9,11 +9,27 @@ import 'package:muawwanah_grosir_flutter/config/string.dart';
 var urlWebServer = url_webServer;
 var arrObjTable = [];
 init_db(String table){
-  arrObjTable.add({
-    'tbl':table,
-    'loaded':false,
-    'list':[],
-  });
+  if( arrObjTable.isNotEmpty ){ //prevent duplication
+    var isTableExist = false;
+    for( var d in arrObjTable ){
+      if( d['tbl'] == table ){
+        isTableExist = true;
+      }
+    }
+    if( !isTableExist ){
+      arrObjTable.add({
+        'tbl':table,
+        'loaded':false,
+        'list':[],
+      });
+    }
+  }else{
+    arrObjTable.add({
+      'tbl':table,
+      'loaded':false,
+      'list':[],
+    });
+  }
 }
 init_db_loadAll(Function fn){
   for( var i=0; i<arrObjTable.length; i++ ){
@@ -68,12 +84,17 @@ getList_byName(String table){
 }
 list_getValue(var list, String targetObj, String targetKey, String targetReturn){
   var value;
-  print(list);
   for( var d in list ){
-    print(d[targetObj]);
     if( d[targetObj] == targetKey ){
       value = d[targetReturn];
     }
+  }
+  return value;
+}
+json_stringNullCheck([String? val]){
+  var value = "";
+  if( val != null ){
+    value = val;
   }
   return value;
 }
@@ -150,4 +171,12 @@ init_nav_keyDown_lrtb(RawKeyEvent key, FocusNode fn, [FocusNode? toLeft, toRight
       }
     }
   }
+}
+
+toast(BuildContext context, String message){
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message),));
+}
+
+parseLongText(String str){
+  return str.replaceAll('<br>', '\n');
 }

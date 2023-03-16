@@ -44,6 +44,7 @@ class _LoginState extends State<Login> {
     global.init_db('akun');
     global.init_db('hak_akses');
     global.init_db('pegawai');
+    fn.requestFocus();
   }
   @override
   Widget build(BuildContext context) {
