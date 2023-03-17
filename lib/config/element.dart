@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dimens.dart' as dm;
 
+Widget eElevatedButton([Color]){
+
+  return ElevatedButton(  onPressed: onPressed, child: child);
+}
+
 class eCheckbox extends StatefulWidget {
   final String text;
   bool value;
@@ -16,7 +21,7 @@ class _eCheckboxState extends State<eCheckbox> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(widget.text),
+        Text(widget.text, style: const TextStyle(fontStyle: FontStyle.italic),),
         Padding(
           padding: const EdgeInsets.fromLTRB(10,  0, 0, 0),
           child: Checkbox(

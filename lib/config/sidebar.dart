@@ -17,33 +17,53 @@ class _SidebarState extends State<Sidebar> {
   }
   @override
   Widget build(BuildContext context) {
-
     return Drawer(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DrawerHeader(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                      Icons.person
-                  ),
-                  Text(
-                    ses_nama,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+          Container(
+            width: double.infinity,
+            child: DrawerHeader(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                        Icons.person
                     ),
-                  ),
-                  Text(
-                      ses_hakAkses,
-                      style : const TextStyle(
-                        fontStyle: FontStyle.italic,
-                      )
-                  )
-                ],
-              )
+                    Text(
+                      ses_nama,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                        ses_hakAkses,
+                        style : const TextStyle(
+                          fontStyle: FontStyle.italic,
+                        )
+                    ),
+                    Expanded(
+                      child: Container(),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton(
+                            onPressed: (){
+                        }, child: Text('Profil Saya')),
+                        ElevatedButton(
+                            onPressed: () async{
+                          await sessionDestroy();
+                          toast(context, 'Logout berhasil !');
+                          Navigator.pushReplacementNamed(context, '/');
+                        },
+                            child: Text('Logout')),
+                      ],
+                    )
+                  ],
+                )
+            ),
           ),
           Expanded(
             child: ListView(
