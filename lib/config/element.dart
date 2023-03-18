@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dimens.dart' as dm;
 
-Widget eElevatedButton([Color]){
-
-  return ElevatedButton(  onPressed: onPressed, child: child);
+Widget eElevatedButton(String text, Function fn, [Color? clr]){
+  if( clr == null ){
+    return ElevatedButton(
+      onPressed: (){
+        fn();
+      }, child: Text(text),);
+  }else{
+    return ElevatedButton(
+      onPressed: (){
+        fn();
+      }, style: ElevatedButton.styleFrom(backgroundColor: clr), child: Text(text),);
+  }
 }
 
 class eCheckbox extends StatefulWidget {
@@ -29,7 +38,6 @@ class _eCheckboxState extends State<eCheckbox> {
               onChanged: (bool? value){
                 setState((){
                   widget.value = value!;
-                  print(value!);
                   widget.fn_onChange();
                 });
               }

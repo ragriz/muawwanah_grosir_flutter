@@ -64,10 +64,14 @@ init_db_reset(){
   }
 }
 init_db_checkIfAllLoaded(){
+  print('\n');
   var value = true;
   for( dynamic d in arrObjTable ){
       if( !d['loaded'] ){
+        print(d['tbl'].toString()+' is not loaded');
          value = false;
+      }else{
+        print(d['tbl'].toString()+' is loaded');
       }
   }
   return value;
@@ -179,4 +183,13 @@ toast(BuildContext context, String message){
 
 parseLongText(String str){
   return str.replaceAll('<br>', '\n');
+}
+
+checkSession(BuildContext context) async{
+  var ses = await sessionGet(session_idAkun);
+  if( ses == null ){
+    toast(context, 'Anda belum login !');
+    Navigator.pushReplacementNamed(context, '/login');
+    print('executed');
+  }
 }

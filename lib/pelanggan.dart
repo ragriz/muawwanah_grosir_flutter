@@ -10,6 +10,7 @@ import 'config/element.dart';
 import 'config/template.dart';
 
 FocusNode fn = FocusNode();
+FocusNode fn_table = FocusNode();
 class Pelanggan extends StatefulWidget{
   @override
   _PelangganState createState() => _PelangganState();
@@ -20,15 +21,25 @@ class _PelangganState extends State<Pelanggan>{
   void initState() {
     // TODO: implement initState
     super.initState();
+    checkSession(context);
     init_db('pelanggan');
     init_db('pelanggan_grup');
     init_db_loadAll(checkData);
-    fn.requestFocus();
   }
+
+  Color colorTable = Colors.red;
+  List<dynamic> list_checkbox = [
+    {'nama' : 'Nama', 'value' : true},
+    {'nama' : 'Grup', 'value' : true},
+    {'nama' : 'Alamat', 'value' : true},
+    {'nama' : 'Email', 'value' : true},
+    {'nama' : 'No Hp', 'value' : true},
+  ];
 
   @override
   Widget build(BuildContext context) {
     globalContext = context;
+    checkSession(context);
     // TODO: implement build
     return Scaffold(
       appBar: temp_appBar(context),
@@ -42,21 +53,47 @@ class _PelangganState extends State<Pelanggan>{
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              temp_headerSearch('Kelola Pelanggan',
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Pelanggan', style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold)),
                   Row(
                     children: [
-                      eCheckbox('Nama', true, checkData),
-                      eCheckbox('Grup', true, checkData),
-                      eCheckbox('Alamat', true, checkData),
-                      eCheckbox('Email', true, checkData),
-                      eCheckbox('No Hp', true, checkData)
-                    ],
+                      Row(
+                        children: checkbox_group(),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: TextField(
+                          onTapOutside: (PointerDownEvent pde){
+                            refreshData();
+                          },
+                          onEditingComplete: (){
+                            refreshData();
+                          },
+                          decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.search)
+                          ),
+                        ),
+                      ),
+                    ]
                   ),
-                  refreshData
+                ],
               ),
               const SizedBox(height: 10,),
               Expanded(
-                child: table(l_pelanggan),
+                child: GestureDetector(
+                  onTap: (){
+                    setState(() {
+                      colorTable = Colors.lightBlueAccent;
+                    });
+                  },
+                  child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: colorTable)
+                      ),
+                      child: table()),
+                ),
               ),
               Container(
                 padding: const EdgeInsets.all(10),
@@ -64,7 +101,10 @@ class _PelangganState extends State<Pelanggan>{
                 child: Row(
                   children: [
                     ElevatedButton(onPressed: (){}, child: const Text('Tambah')),
-                    ElevatedButton( style : ElevatedButton.styleFrom(backgroundColor: Colors.yellow), onPressed: (){}, child: const Text('Tambah')),
+                    const SizedBox(width: 5,),
+                    ElevatedButton( style : ElevatedButton.styleFrom(backgroundColor: Colors.orange), onPressed: (){}, child: const Text('Update')),
+                    const SizedBox(width: 5,),
+                    ElevatedButton( style : ElevatedButton.styleFrom(backgroundColor: Colors.red), onPressed: (){}, child: const Text('Hapus')),
                   ],
                 ),
               ),
@@ -72,6 +112,33 @@ class _PelangganState extends State<Pelanggan>{
           ),
         ),
       ),
+    );
+  }
+
+  checkbox_group(){
+    List<Widget> value = [];
+    for( var i=0; i<list_checkbox.length; i++ ){
+      value.add(checkbox(i));
+    }
+    return value;
+  }
+  Widget checkbox(int pos){
+    return Row(
+      children: [
+        Text(list_checkbox[pos]['nama'], style: const TextStyle(fontStyle: FontStyle.italic),),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(10,  0, 0, 0),
+          child: Checkbox(
+              value: list_checkbox[pos]['value'],
+              onChanged: (bool? value){
+                setState((){
+                  list_checkbox[pos]['value'] = value!;
+                  refreshData();
+                });
+              }
+          ),
+        )
+      ],
     );
   }
 
@@ -85,8 +152,7 @@ class _PelangganState extends State<Pelanggan>{
   }
 
   refreshData(){
-    setState((){});
-    print('executed');
+
   }
 
   handleKey(RawKeyEvent key) {
@@ -132,28 +198,17 @@ setFocus(int pos){
 }
 
 class table extends StatefulWidget {
-  var d;
-  table(List<dynamic> d);
   @override
   State<table> createState() => _tableState();
 }
 
 class _tableState extends State<table> {
+  var col = ['ID', 'Grup', 'Nama', 'Alamat', 'Email', 'No Hp'];
+  List<DataColumn> l_columns = [];
   @override
-  Widget build(BuildContext context) {
-    return setRow();
-  }
-
-  setRow(){
-    l_pelanggan = getList_byName('pelanggan');
-    for( var d in l_pelanggan ){
-      selectedIndex.add(false);
-    }
-    var l_pelangganGrup = getList_byName('pelanggan_grup');
-    var col = ['ID', 'Grup', 'Nama', 'Alamat', 'Email', 'No Hp'];
-    var cellPadding = 2.0;
-    List<DataRow> l_rows = [];
-    List<DataColumn> l_columns = [];
+  void initState() {
+    // TODO: implement initState
+    super.initState();
     for( var d in col ){
       l_columns.add(
           DataColumn(
@@ -165,6 +220,29 @@ class _tableState extends State<table> {
           )
       );
     }
+
+  }
+  @override
+  Widget build(BuildContext context) {
+    if(l_pelanggan.isNotEmpty){
+      return setRow();
+    }else{
+      return Column(children: [
+        DataTable(columns: l_columns, rows: []),
+        SizedBox(height: 30,),
+        CircularProgressIndicator(),
+        SizedBox(height: 10,),
+        Text('Memuat data . . .')
+      ],);
+    }
+  }
+
+  setRow(){
+    for( var d in l_pelanggan ){
+      selectedIndex.add(false);
+    }
+    var l_pelangganGrup = getList_byName('pelanggan_grup');
+    List<DataRow> l_rows = [];
     for( var i=0; i<l_pelanggan.length; i++){
       Map<String, dynamic> map = jsonDecode(l_pelanggan[i]['json']);
       var alamat = "Alamat Singkat : "+json_stringNullCheck(map['alamatSingkat'])+"\nAlamat Lengkap : \n"+parseLongText(json_stringNullCheck(map['alamatLengkap']));
@@ -173,7 +251,6 @@ class _tableState extends State<table> {
         if( l_pelanggan[i]['nama'] != tf_search_header.text ){
           passed = false;
         }
-        print(passed);
         if( passed ){
           l_rows.add(DataRow(
               selected: selectedIndex[i],
@@ -181,7 +258,6 @@ class _tableState extends State<table> {
                 setState((){
                   selectedPos = i;
                   setFocus(selectedPos);
-                  print(selectedPos);
                 });
               },
               cells: [
@@ -200,7 +276,6 @@ class _tableState extends State<table> {
               setState((){
                 selectedPos = i;
                 setFocus(selectedPos);
-                print(selectedPos);
               });
             },
             cells: [

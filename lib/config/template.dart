@@ -58,10 +58,8 @@ class temp_headerSearch extends StatelessWidget {
             SizedBox(
               width: searchFieldSize,
               child: TextField(
-                controller: tf_search_header,
                 onTapOutside: (PointerDownEvent e){
                   fc_search();
-
                 },
                 onEditingComplete: (){
                   fc_search();

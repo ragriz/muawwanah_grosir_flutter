@@ -15,7 +15,7 @@ List<HakAkses> list = [];
 int id_hakAkses = 0;
 String str_bt_server = "Login";
 bool vis_bt_server = false;
-bool vis_login = false, vis_database = true;
+bool vis_login = false, vis_database = false, vis_loading = true;
 bool vis_cpi_bt_server = false;
 bool isCheckingServer = false;
 TextEditingController tf_server = TextEditingController();
@@ -41,6 +41,7 @@ class _LoginState extends State<Login> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    checkSession();
     global.init_db('akun');
     global.init_db('hak_akses');
     global.init_db('pegawai');
@@ -57,11 +58,28 @@ class _LoginState extends State<Login> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Visibility(
+                  visible: vis_loading,
+                  child: Card(
+                    elevation: 10,
+                    child : Padding(
+                      padding: const EdgeInsets.all(30),
+                      child: Column(
+                        children: const [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 10,),
+                          Text('Memuat . . .')
+                        ],
+                      ),
+                    )
+                  ),
+                ),
+                Visibility(
                   visible: vis_login,
                   child: Wrap(
                     children: [Container(
                       padding: const EdgeInsets.all(20),
                       child: Card(
+                        elevation: 10,
                         child: Padding(
                           padding: const EdgeInsets.all(30),
                           child: Column(
@@ -144,6 +162,7 @@ class _LoginState extends State<Login> {
                     children: [Container(
                       padding: const EdgeInsets.all(20),
                       child: Card(
+                        elevation: 10,
                         child: Padding(
                           padding: const EdgeInsets.all(30),
                           child: Column(
@@ -216,6 +235,19 @@ class _LoginState extends State<Login> {
     );
   }
 
+  checkSession() async{
+    var ses = await global.sessionGet(session_idAkun);
+    if( ses != null ){
+      global.toast(context, 'sesi belum berakhir, mengalihkan ke halaman utama . . .');
+      Timer(Duration(seconds : 2 ), (){Navigator.pushReplacementNamed(context, '/main');});
+    }else{
+      setState(() {
+        vis_loading = false;
+        vis_database = true;
+      });
+    }
+  }
+
   getServer(BuildContext context) async {
     isCheckingServer = true;
     var curServer = tf_server.text;
@@ -255,7 +287,6 @@ class _LoginState extends State<Login> {
           }
           */
         }else{
-          print(response.statusCode);
           doServerError(context);
         }
       } catch(e){
@@ -318,8 +349,6 @@ class _LoginState extends State<Login> {
         List<dynamic> l_akun = global.getList_byName('akun');
         for( dynamic l in l_akun ){
           Map<String, dynamic> map = json.decode(l['json']);
-          print(l['username']);
-          print(l['pass']);
           if( tf_user.text == l['username'] && tf_pass.text == l['pass'] && id_hakAkses == int.parse(l['id_hakAkses']) ){
             curAkun = l['id'];
             if( map['boolean_akunKhusus']!=null ){

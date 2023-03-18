@@ -54,10 +54,12 @@ class _SidebarState extends State<Sidebar> {
                         }, child: Text('Profil Saya')),
                         ElevatedButton(
                             onPressed: () async{
+
                           await sessionDestroy();
                           toast(context, 'Logout berhasil !');
                           Navigator.pushReplacementNamed(context, '/');
                         },
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                             child: Text('Logout')),
                       ],
                     )
@@ -70,6 +72,7 @@ class _SidebarState extends State<Sidebar> {
               children: [
                 ListTile(
                   title: Text('Dashboard'),
+
                 ),
                 Visibility(
                   child: ListTile(
