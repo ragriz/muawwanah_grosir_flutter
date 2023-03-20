@@ -380,18 +380,23 @@ class _LoginState extends State<Login> {
    */
   }
 
-}
-
-handleKey(RawKeyEvent key) {
-  if (key.runtimeType.toString() == 'RawKeyDownEvent') {
-    global.init_nav_keyDown_lrtb(key, fn_tf_server, null, null, null, fn_bt_server);
-    global.init_nav_keyDown_lrtb(key, fn_bt_server, null, null, fn_tf_server, null);
-    global.init_nav_keyDown_lrtb(key, fn_tf_user, null, null, null, fn_tf_pass);
-    global.init_nav_keyDown_lrtb(key, fn_tf_pass, null, null, fn_tf_user, fn_dd_hakAkses);
-    global.init_nav_keyDown_lrtb(key, fn_dd_hakAkses, null, fn_bt_back, fn_tf_pass, fn_bt_login);
-    global.init_nav_keyDown_lrtb(key, fn_bt_back, fn_dd_hakAkses, fn_bt_login, fn_dd_hakAkses, null);
-    global.init_nav_keyDown_lrtb(key, fn_bt_login, fn_bt_back, null, fn_dd_hakAkses, null);
+  handleKey(RawKeyEvent key) {
+    if (key.runtimeType.toString() == 'RawKeyDownEvent') {
+      global.init_nav_keyDown_lrtb(key, fn_tf_server, null, null, null, fn_bt_server);
+      global.init_nav_keyDown_lrtb(key, fn_bt_server, null, null, fn_tf_server, null);
+      global.init_nav_keyDown_lrtb(key, fn_tf_user, null, null, null, fn_tf_pass);
+      global.init_nav_keyDown_lrtb(key, fn_tf_pass, null, null, fn_tf_user, fn_dd_hakAkses);
+      global.init_nav_keyDown_lrtb(key, fn_dd_hakAkses, null, fn_bt_back, fn_tf_pass, fn_bt_login);
+      global.init_nav_keyDown_lrtb(key, fn_bt_back, fn_dd_hakAkses, fn_bt_login, fn_dd_hakAkses, null);
+      global.init_nav_keyDown_lrtb(key, fn_bt_login, fn_bt_back, null, fn_dd_hakAkses, null);
+      if( fn_tf_pass.hasFocus ){
+        if( key.logicalKey == LogicalKeyboardKey.enter ){
+          login(context);
+        }
+      }
+    }
   }
+
 }
 
 class DropdownButtonExample extends StatefulWidget {

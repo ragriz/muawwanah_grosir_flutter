@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hovering/hovering.dart';
 import 'package:muawwanah_grosir_flutter/config/global.dart';
 import 'config/string.dart' as str;
 import 'config/color.dart' as clr;
@@ -11,11 +12,14 @@ import 'config/template.dart';
 
 FocusNode fn = FocusNode();
 FocusNode fn_table = FocusNode();
+FocusNode fn_search = FocusNode();
+bool isTableFocused = false;
+bool isHover_table = false;
 class Pelanggan extends StatefulWidget{
   @override
   _PelangganState createState() => _PelangganState();
 }
-
+Color colorTable = Colors.red;
 class _PelangganState extends State<Pelanggan>{
   @override
   void initState() {
@@ -25,9 +29,9 @@ class _PelangganState extends State<Pelanggan>{
     init_db('pelanggan');
     init_db('pelanggan_grup');
     init_db_loadAll(checkData);
+    fn.requestFocus();
   }
 
-  Color colorTable = Colors.red;
   List<dynamic> list_checkbox = [
     {'nama' : 'Nama', 'value' : true},
     {'nama' : 'Grup', 'value' : true},
@@ -47,68 +51,94 @@ class _PelangganState extends State<Pelanggan>{
       body: RawKeyboardListener(
         focusNode: fn,
         onKey: handleKey,
-        child: Container(
-          padding: const EdgeInsets.all(5.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Pelanggan', style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold)),
-                  Row(
+        child: GestureDetector(
+          onTap: (){
+            if( isHover_table ){
+              colorTable = Colors.blueAccent;
+              isTableFocused = true;
+              setFocus(selectedPos);
+            }else{
+              colorTable = Colors.red;
+              isTableFocused = false;
+              clearFocusTable();
+            }
+            print('isHover_table : '+isHover_table.toString());
+            print('colorTable : '+colorTable.toString());
+            print('isTableFocused : '+isTableFocused.toString());
+            setState((){});
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.transparent)
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Text('Pelanggan', style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold)),
                       Row(
-                        children: checkbox_group(),
-                      ),
-                      SizedBox(
-                        width: 150,
-                        child: TextField(
-                          onTapOutside: (PointerDownEvent pde){
-                            refreshData();
-                          },
-                          onEditingComplete: (){
-                            refreshData();
-                          },
-                          decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.search)
+                        children: [
+                          Row(
+                            children: checkbox_group(),
                           ),
-                        ),
+                          SizedBox(
+                            width: 150,
+                            child: TextField(
+                              focusNode: fn_search,
+                              onTapOutside: (PointerDownEvent pde){
+                                refreshData();
+                                fn_search.unfocus();
+                              },
+                              onEditingComplete: (){
+                                refreshData();
+                              },
+                              decoration: const InputDecoration(
+                                  prefixIcon: Icon(Icons.search)
+                              ),
+                            ),
+                          ),
+                        ]
                       ),
-                    ]
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 10,),
-              Expanded(
-                child: GestureDetector(
-                  onTap: (){
-                    setState(() {
-                      colorTable = Colors.lightBlueAccent;
-                    });
-                  },
+                ),
+                const SizedBox(height: 10,),
+                Expanded(
                   child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: colorTable)
-                      ),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                        border: Border.all(color: colorTable)
+                    ),
+                    child: MouseRegion(
+                      onEnter: (PointerEvent){
+                        isHover_table = true;
+                      },
+                      onExit: (PointerEvent){
+                        isHover_table = false;
+                      },
                       child: table()),
+                  ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                height: 50,
-                child: Row(
-                  children: [
-                    ElevatedButton(onPressed: (){}, child: const Text('Tambah')),
-                    const SizedBox(width: 5,),
-                    ElevatedButton( style : ElevatedButton.styleFrom(backgroundColor: Colors.orange), onPressed: (){}, child: const Text('Update')),
-                    const SizedBox(width: 5,),
-                    ElevatedButton( style : ElevatedButton.styleFrom(backgroundColor: Colors.red), onPressed: (){}, child: const Text('Hapus')),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  height: 50,
+                  child: Row(
+                    children: [
+                      ElevatedButton(onPressed: (){}, child: const Text('Tambah')),
+                      const SizedBox(width: 5,),
+                      ElevatedButton( style : ElevatedButton.styleFrom(backgroundColor: Colors.orange), onPressed: (){}, child: const Text('Update')),
+                      const SizedBox(width: 5,),
+                      ElevatedButton( style : ElevatedButton.styleFrom(backgroundColor: Colors.red), onPressed: (){}, child: const Text('Hapus')),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -132,6 +162,7 @@ class _PelangganState extends State<Pelanggan>{
               value: list_checkbox[pos]['value'],
               onChanged: (bool? value){
                 setState((){
+                  isTableFocused = true;
                   list_checkbox[pos]['value'] = value!;
                   refreshData();
                 });
@@ -157,26 +188,28 @@ class _PelangganState extends State<Pelanggan>{
 
   handleKey(RawKeyEvent key) {
     if (key.runtimeType.toString() == 'RawKeyDownEvent') {
-      if( key.logicalKey == LogicalKeyboardKey.arrowUp ){
-        if( selectedPos != 0 ){
-          setState(() {
-            selectedPos--;
-            for( var i=0; i<selectedIndex.length; i++){
-              if( i==selectedPos ){
-                selectedIndex[i] = true;
-              }else{
-                selectedIndex[i] = false;
+      if( isTableFocused ){
+        if( key.logicalKey == LogicalKeyboardKey.arrowUp ){
+          if( selectedPos != 0 ){
+            setState(() {
+              selectedPos--;
+              for( var i=0; i<selectedIndex.length; i++){
+                if( i==selectedPos ){
+                  selectedIndex[i] = true;
+                }else{
+                  selectedIndex[i] = false;
+                }
               }
-            }
-          });
+            });
+          }
         }
-      }
-      if( key.logicalKey == LogicalKeyboardKey.arrowDown ){
-        if( selectedPos != l_pelanggan.length-1 ){
-          setState(() {
-            selectedPos++;
-            setFocus(selectedPos);
-          });
+        if( key.logicalKey == LogicalKeyboardKey.arrowDown ){
+          if( selectedPos != l_pelanggan.length-1 ){
+            setState(() {
+              selectedPos++;
+              setFocus(selectedPos);
+            });
+          }
         }
       }
     }
@@ -194,6 +227,12 @@ setFocus(int pos){
     }else{
       selectedIndex[i] = false;
     }
+  }
+}
+
+clearFocusTable(){
+  for( var i=0; i<selectedIndex.length; i++ ){
+    selectedIndex[i] = false;
   }
 }
 
@@ -256,6 +295,10 @@ class _tableState extends State<table> {
               selected: selectedIndex[i],
               onSelectChanged: (bool? b){
                 setState((){
+                  if( !isTableFocused ){
+                    colorTable = Colors.blueAccent;
+                    isTableFocused = true;
+                  }
                   selectedPos = i;
                   setFocus(selectedPos);
                 });
@@ -297,7 +340,6 @@ class _tableState extends State<table> {
     );
   }
 }
-
 /*
 child: FutureBuilder(
 future: refreshUi(),

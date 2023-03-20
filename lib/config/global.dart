@@ -190,6 +190,6 @@ checkSession(BuildContext context) async{
   if( ses == null ){
     toast(context, 'Anda belum login !');
     Navigator.pushReplacementNamed(context, '/login');
-    print('executed');
+    //print('executed');
   }
 }

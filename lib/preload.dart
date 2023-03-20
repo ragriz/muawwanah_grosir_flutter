@@ -50,12 +50,13 @@ class _PreloadState extends State<Preload>{
 
   checkSession() async{
     var ses = await sessionGet(session_idAkun);
-    /*
     if( ses != null ){
-      Navigator.pushReplacementNamed(context, '/main');
+      //Navigator.pushReplacementNamed(context, '/main');
     }else{
       Navigator.pushReplacementNamed(context, '/login');
     }
+    /*
+
      */
   }
 }

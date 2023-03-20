@@ -5,6 +5,10 @@ import 'config/template.dart';
 import 'config/sidebar.dart';
 
 
+void main(){
+  runApp(Main());
+}
+
 class Main extends StatefulWidget{
   @override
   _MainState createState() => _MainState();
