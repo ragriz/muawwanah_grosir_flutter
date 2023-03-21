@@ -261,6 +261,7 @@ class _tableState extends State<table> {
     }
 
   }
+
   @override
   Widget build(BuildContext context) {
     if(l_pelanggan.isNotEmpty){
@@ -275,14 +276,25 @@ class _tableState extends State<table> {
       ],);
     }
   }
+  var colorTest;
 
   setRow(){
     for( var d in l_pelanggan ){
       selectedIndex.add(false);
     }
     var l_pelangganGrup = getList_byName('pelanggan_grup');
-    List<TableRow> l_rowsHeader = [];
+    List<TableCell> l_rowsHeader = [];
     List<TableRow> l_rows = [];
+    for( var d in col){
+      l_rowsHeader.add(TableCell(
+        child: Container(
+            color: Colors.black,
+            child: Text(d, style: const TextStyle(color : Colors.white))),
+      ));
+    }
+    l_rows.add(TableRow(
+      children: l_rowsHeader
+    ));
     List<Widget> l_rows_child = [];
     for( var i=0; i<l_pelanggan.length; i++){
       Map<String, dynamic> map = jsonDecode(l_pelanggan[i]['json']);
@@ -294,13 +306,22 @@ class _tableState extends State<table> {
         }
         if( passed ){
           l_rows.add(
-            const TableRow(
+            TableRow(
               children: [
                 TableCell(
-                  child: Text('Text'),
+                  child: MouseRegion(
+                    onEnter: (PointerEvent e){
+                      colorTest = Colors.blueAccent.withAlpha(50);
+                    },
+                      onExit: (PointerExitEvent e){
+                        colorTest = Colors.white;
+                      },
+                      child: Container(
+                        color: colorTest,
+                          child: Text(l_pelanggan[i]['id']))),
                 ),
                 TableCell(
-                  child: Text('Text'),
+                  child: Text('text'),
                 ),
                 TableCell(
                   child: Text('Text'),
@@ -317,80 +338,72 @@ class _tableState extends State<table> {
               ]
             )
           );
-          /*
-          l_rows.add(TableCell(
-              selected: selectedIndex[i],
-              onSelectChanged: (bool? b){
-                setState((){
-                  if( !isTableFocused ){
-                    colorTable = Colors.blueAccent;
-                    isTableFocused = true;
-                  }
-                  selectedPos = i;
-                  setFocus(selectedPos);
-                });
-              },
-              cells: [
-                DataCell(Text(l_pelanggan[i]['id'])),
-                DataCell(Text(list_getValue(l_pelangganGrup, 'id', l_pelanggan[i]['id_pelangganGrup'], 'nama'))),
-                DataCell(Text(l_pelanggan[i]['nama'])),
-                DataCell(Text(alamat)),
-                DataCell(Text(json_stringNullCheck(map['email']))),
-                DataCell(Text(json_stringNullCheck(map['nohp']))),
-              ]));
-           */
         }
       }else{
         print('not passed');
         l_rows.add(
-            const TableRow(
+            TableRow(
                 children: [
-                  TableCell(
-                    child: Text('Text'),
-                  ),
-                  TableCell(
-                    child: Text('Text'),
-                  ),
-                  TableCell(
-                    child: Text('Text'),
-                  ),
-                  TableCell(
-                    child: Text('Text'),
-                  ),
-                  TableCell(
-                    child: Text('Text'),
-                  ),
-                  TableCell(
-                    child: Text('Text'),
-                  ),
+                  cell(i, l_pelanggan[i]['id']),
+                  cell(i, list_getValue(l_pelangganGrup, 'id', l_pelanggan[i]['id_pelangganGrup'], 'nama')),
+                  cell(i, l_pelanggan[i]['nama']),
+                  cell(i, alamat),
+                  cell(i, json_stringNullCheck(map['email'], '-')),
+                  cell(i, json_stringNullCheck(map['nohp'], '-')),
                 ]
             )
         );
-        /*
-        l_rows.add(DataRow(
-            selected: selectedIndex[i],
-            onSelectChanged: (bool? b){
-              setState((){
-                selectedPos = i;
-                setFocus(selectedPos);
-              });
-            },
-            cells: [
-              DataCell(Text(l_pelanggan[i]['id'])),
-              DataCell(Text(list_getValue(l_pelangganGrup, 'id', l_pelanggan[i]['id_pelangganGrup'], 'nama'))),
-              DataCell(Text(l_pelanggan[i]['nama'])),
-              DataCell(Text(alamat)),
-              DataCell(Text(json_stringNullCheck(map['email']))),
-              DataCell(Text(json_stringNullCheck(map['nohp']))),
-            ]));
-         */
       }
     }
     return Table(
+      border: TableBorder.all(),
       children: l_rows,
     );
   }
 }
+addRow(){
+
+}
+
+class cell extends StatefulWidget {
+  String value;
+  int pos;
+  cell(this.pos, this.value, {super.key});
+  @override
+  State<cell> createState() => _cellState();
+}
+
+class _cellState extends State<cell> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    if( widget.pos%2 == 0 ){
+      colorBg = Colors.black.withOpacity(0.5);
+    }else{
+      colorBg = Colors.white;
+    }
+  }
+
+  var colorTest;
+  var colorBg;
+
+  @override
+  Widget build(BuildContext context) {
+    return TableCell(
+      child: GestureDetector(
+        onTap : (){
+          toast(context, widget.value);
+        },
+        child: Container(
+          height: 17,
+            color: colorBg,
+            child: Text(widget.value, overflow: TextOverflow.ellipsis,)),
+      ),
+    );
+  }
+}
+
 /*
 child: FutureBuilder(
 future: refreshUi(),

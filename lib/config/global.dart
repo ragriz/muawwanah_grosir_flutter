@@ -95,10 +95,14 @@ list_getValue(var list, String targetObj, String targetKey, String targetReturn)
   }
   return value;
 }
-json_stringNullCheck([String? val]){
+json_stringNullCheck([String? val, String? alternate]){
   var value = "";
   if( val != null ){
     value = val;
+  }else{
+    if( alternate != null ){
+      value = alternate;
+    }
   }
   return value;
 }

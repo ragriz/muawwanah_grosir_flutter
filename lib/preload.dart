@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
 import 'config/string.dart';
@@ -7,12 +5,14 @@ import 'login.dart';
 import 'main.dart';
 import 'pelanggan.dart';
 import 'test.dart';
+import 'test2.dart';
 import 'config/global.dart';
 
 void main() => runApp(MaterialApp(
   routes: {
     '/' : (context) => Preload(),
     '/test' : (context) => Test(),
+    '/test2' : (context) => Test2(),
     '/login' : (context) => Login(),
     '/main' : (context) => Main(),
     '/pelanggan' : (context) => Pelanggan(),
