@@ -5,10 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:muawwanah_grosir_flutter/pelanggan.dart';
+import 'package:muawwanah_grosir_flutter/test.dart';
+import 'package:muawwanah_grosir_flutter/test2.dart';
 import 'config/string.dart';
 import 'config/color.dart' as clr;
 import 'config/global.dart' as global;
 import 'package:http/http.dart' as http;
+
+import 'main.dart';
 
 List<HakAkses> list = [];
 int id_hakAkses = 0;
@@ -29,6 +34,18 @@ FocusNode fn_bt_login = FocusNode();
 FocusNode fn_dd_hakAkses = FocusNode();
 FocusNode fn = FocusNode();
 List<HakAkses> l_hakAkses = [];
+
+void main() => runApp(MaterialApp(
+  routes: {
+    '/' : (context) => Login(),
+    '/test' : (context) => Test(),
+    '/test2' : (context) => Test2(),
+    '/login' : (context) => Login(),
+    '/main' : (context) => Main(),
+    '/pelanggan' : (context) => Pelanggan(),
+  },
+));
+
 class Login extends StatefulWidget {
   Login({super.key});
   @override
@@ -41,10 +58,6 @@ class _LoginState extends State<Login> {
     // TODO: implement initState
     super.initState();
     checkSession();
-    global.init_db('akun');
-    global.init_db('hak_akses');
-    global.init_db('pegawai');
-    fn.requestFocus();
   }
   @override
   Widget build(BuildContext context) {
@@ -186,38 +199,8 @@ class _LoginState extends State<Login> {
                               ),
                               Container(
                                 margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    AnimatedSize(
-                                      duration: const Duration(seconds: 1),
-                                      child: ElevatedButton(
-                                        onPressed: (){
-                                          getServer(context);
-                                        },
-                                        focusNode: fn_bt_server,
-                                        child: Row(
-                                          children: [
-                                            Visibility(
-                                                visible: vis_cpi_bt_server,
-                                                child: Row(
-                                                  children: const [
-                                                    SizedBox(
-                                                      width: 20,
-                                                      height: 20,
-                                                      child: CircularProgressIndicator(
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                    SizedBox(width: 10),
-                                                  ],
-                                                ),
-                                            ),
-                                            Text(str_bt_server)
-                                          ],
-                                        )),
-                                    )
-                                  ],
+                                child: btnLoading(
+                                  key: btnServer
                                 ),
                               ),
                             ],
@@ -240,6 +223,10 @@ class _LoginState extends State<Login> {
       global.toast(context, 'sesi belum berakhir, mengalihkan ke halaman utama . . .');
       Timer(Duration(seconds : 2 ), (){Navigator.pushReplacementNamed(context, '/main');});
     }else{
+      global.init_db('akun');
+      global.init_db('hak_akses');
+      global.init_db('pegawai');
+      fn.requestFocus();
       setState(() {
         vis_loading = false;
         vis_database = true;
@@ -453,4 +440,59 @@ class HakAkses{
     'id' : id,
     'nama': nama
   };
+}
+
+GlobalKey<btnLoadingState> btnServer = GlobalKey();
+
+class btnLoading extends StatefulWidget{
+  const btnLoading ({required Key key}) : super(key: key);
+  @override
+  State<btnLoading> createState() => btnLoadingState();
+}
+
+class btnLoadingState extends State<btnLoading>{
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        AnimatedSize(
+          duration: const Duration(seconds: 1),
+          child: ElevatedButton(
+              onPressed: (){
+                vis_cpi_bt_server = true;
+                btnServer.currentState?.setState(() {});
+              },
+              focusNode: fn_bt_server,
+              child: Row(
+                children: [
+                  Visibility(
+                    visible: vis_cpi_bt_server,
+                    child: Row(
+                      children: const [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                      ],
+                    ),
+                  ),
+                  Text(str_bt_server)
+                ],
+              )),
+        )
+      ],
+    );
+  }
 }
